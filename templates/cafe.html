@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Wifi and Coffee</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/main.css') }}" />
+		<style>
+			.flex {
+				display: flex;
+				gap: 20px;
+				align-items: flex-start;
+			}
+
+			.flex p {
+				font-size: 1.2em
+			}
+
+			.flex a {
+				width: 50%
+			}
+
+			iframe {
+				width: 55%;
+				aspect-ratio: 3 / 2;
+			}
+		</style>
+		<noscript><link rel="stylesheet" href="{{ url_for('static', filename='assets/css/noscript.css') }}" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Nav -->
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="{{ url_for('home') }}">Home</a></li>
+						</ul>
+						<form action="/search" method="GET">
+							<input type="text" name="q" placeholder="Search..." />
+							<input type="submit" style="margin-top: 1.5em" value="Search" class="primary">
+					  	</form>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<header>
+								<a href="{{ url_for('home') }}" class="button primary"><- Back to Home</a>
+								<h1>{{ cafe['name'] }}</h1>
+                            </header>
+							<div class="flex">
+								<iframe
+									style="border:0"
+									loading="lazy"
+									allowfullscreen
+									referrerpolicy="no-referrer-when-downgrade"
+									src="{{ url }}">
+								</iframe>
+								<div>
+									<p>
+										{% if not found %}
+										*Could not load location on map*<br><br>
+										{% endif %}
+
+										{{ cafe['name'] }}
+
+										{% for req in range(int(len(req_list)/2)) %}
+											{% if cafe[req_list[req]] %}
+												{% if req == 3 %}
+													and does {{ req_list[req+4] }}.
+												{% else %}
+													does {{ req_list[req+4] }},
+												{% endif %}
+											{% else %}
+												{% if req == 3 %}
+													and doesn't {{ req_list[req+4] }}.
+												{% else %}
+													doesn't {{ req_list[req+4] }},
+												{% endif %}
+											{% endif %}
+										{% endfor %}
+										<br><br>
+
+										The average cost of coffee is {{ cafe['coffee_price'] }} and it has {{ cafe['seats'] }} seats.
+									</p>
+								</div>
+							</div>
+							<div class="flex" style="margin-top: 3em">
+								{% if not cafe['id'] == 1 %}
+								<a href="{{ url_for('show_cafe', cafe_id=cafe['id']-1) }}" class="button primary"><- Previous Cafe</a>
+								{% endif %}
+								<a href="{{ url_for('show_cafe', cafe_id=cafe['id']+1) }}" class="button primary">Next Cafe -></a>
+							</div>
+						</div>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<ul class="copyright">
+								<li>&copy; Jesse Ijiyemi 2025.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/browser.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/breakpoints.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/util.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+
+	</body>
+</html>
