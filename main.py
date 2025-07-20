@@ -39,7 +39,7 @@ with app.app_context():
 def to_dict(self):
     return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
-is_checked = ['has_wifi', 'has_sockets', 'has_toilet', 'can_take_calls']
+is_checked = []
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
