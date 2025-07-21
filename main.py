@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, abort
+from flask_bootstrap import Bootstrap4
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, SelectField
+from wtforms.validators import DataRequired, URL
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Boolean, select
+from sqlalchemy import Integer, String, Boolean
 from dotenv import load_dotenv
 import requests
 import os
@@ -10,17 +14,16 @@ from random import choice
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 API_KEY = os.environ.get('GOOGLE_API_KEY')
+Bootstrap4(app)
 
-# CREATE DB
 class Base(DeclarativeBase):
     pass
-# Connect to Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
-# Cafe TABLE Configuration
 class Cafe(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
@@ -35,6 +38,18 @@ class Cafe(db.Model):
 
 with app.app_context():
     db.create_all()
+
+class CafeForm(FlaskForm):
+    name = StringField('Cafe Name', validators=[DataRequired()])
+    location = StringField('Location/City', validators=[DataRequired()])
+    map_url = StringField('Google Map URL', validators=[DataRequired(), URL()])
+    seats = SelectField('Amount of Seats', choices=['0-10', '10-20', '20-30', '40-50', '50+'], validators=[DataRequired()])
+    coffee_price = StringField('Average Coffee Price (GBP)', validators=[DataRequired()])
+    has_wifi = SelectField('Has Wifi', choices=['True', 'False'], validators=[DataRequired()])
+    has_sockets = SelectField('Has Power Sockets', choices=['True', 'False'], validators=[DataRequired()])
+    has_toilet = SelectField('Has Bathrooms', choices=['True', 'False'], validators=[DataRequired()])
+    can_take_calls = SelectField('Takes Phone Calls', choices=['True', 'False'], validators=[DataRequired()])
+    submit = SubmitField('Submit Post')
 
 def to_dict(self):
     return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -69,16 +84,16 @@ def home():
         else:
             return False
 
-    return render_template("index.html", cafes=cafes, len=len, int=int, req_list=req_list, search=False, is_checked=is_checked, check_req=check_req)
+    return render_template('index.html', cafes=cafes, len=len, int=int, req_list=req_list, search=False, is_checked=is_checked, check_req=check_req)
 
-@app.route('/search', methods=["GET"])
+@app.route('/search', methods=['GET'])
 def search():
     global req_list
     cafes = [to_dict(cafe) for cafe in Cafe.query.order_by(Cafe.id).all()]
 
     new_cafes = []
 
-    if request.method == "GET":
+    if request.method == 'GET':
         query = request.args.get('q')
         for cafe in cafes:
             words = [word for word in cafe['name'].lower().split()]
@@ -110,19 +125,18 @@ def search():
 
 @app.route('/cafe/<int:cafe_id>')
 def show_cafe(cafe_id):
-    req_list = ['has_wifi', 'has_sockets', 'has_toilet', 'can_take_calls', 'have reliable wifi', 'have power sockets',
-                'have restrooms', 'take calls']
+    global req_list
 
     cafe = to_dict(db.session.get(Cafe, cafe_id))
     if not cafe:
         abort(404, description='Cafe not found')
     else:
-        url = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
+        url = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
         params = {
-            "input": cafe['name'],
-            "inputtype": "textquery",
-            "fields": "place_id",
-            "key": API_KEY
+            'input': cafe['name'],
+            'inputtype': 'textquery',
+            'fields': 'place_id',
+            'key': API_KEY
         }
 
         response = requests.get(url, params=params).json()
@@ -133,63 +147,63 @@ def show_cafe(cafe_id):
             map_url = f'https://www.google.com/maps/embed/v1/place?key={API_KEY}&q=London'
             found = False
 
-        return render_template('cafe.html', cafe=cafe, url=map_url, int=int, len=len, found=found, req_list=req_list)
+        return render_template('cafe.html', cafe=cafe, cafes=[to_dict(cafe) for cafe in Cafe.query.order_by(Cafe.id).all()], url=map_url, int=int, len=len, found=found, req_list=req_list)
 
-# # HTTP POST - Create Record
-# @app.route("/add", methods=["POST"])
-# def add():
-#     if request.method == "POST":
-#         try:
-#             new_cafe = Cafe(
-#                 name=request.form.get("name"),
-#                 map_url=request.form.get("map_url"),
-#                 img_url=request.form.get("img_url"),
-#                 location=request.form.get("loc"),
-#                 has_sockets=bool(request.form.get("sockets")),
-#                 has_toilet=bool(request.form.get("toilet")),
-#                 has_wifi=bool(request.form.get("wifi")),
-#                 can_take_calls=bool(request.form.get("calls")),
-#                 seats=request.form.get("seats"),
-#                 coffee_price=request.form.get("coffee_price")
-#             )
-#             db.session.add(new_cafe)
-#             db.session.commit()
-#
-#             response = {"success": "Successfully added the new cafe."}
-#             return jsonify(response=response)
-#
-#         except:
-#             error = {"fail": "Failed to add new cafe. Possibly missing field(s)?"}
-#             return jsonify(error=error)
+@app.route('/add', methods=['GET', 'POST'])
+def add():
+    form = CafeForm()
+
+    def check_bool(q):
+        return q == 'True'
+
+    if form.validate_on_submit():
+        new_cafe = Cafe(
+            name=request.form.get('name'),
+            map_url=request.form.get('map_url'),
+            location=request.form.get('location'),
+            has_sockets=check_bool(request.form.get('has_sockets')),
+            has_toilet=check_bool(request.form.get('has_toilet')),
+            has_wifi=check_bool(request.form.get('has_wifi')),
+            can_take_calls=check_bool(request.form.get('can_take_calls')),
+            seats=request.form.get('seats'),
+            coffee_price=f'£{request.form.get('coffee_price')}'
+        )
+        db.session.add(new_cafe)
+        db.session.commit()
+
+        return redirect(url_for('show_cafe', cafe_id=new_cafe.id))
+
+    return render_template('add.html', form=form)
+
 #
 # # HTTP PUT/PATCH - Update Record
-# @app.route("/update-price/<int:cafe_id>", methods=["PATCH"])
+# @app.route('/update-price/<int:cafe_id>', methods=['PATCH'])
 # def update_price(cafe_id):
-#     new_price = request.args.get("new-price")
+#     new_price = request.args.get('new-price')
 #     try:
 #         cafe = db.session.get(Cafe, cafe_id)
 #     except AttributeError:
-#         return jsonify(error={"Not Found": "Sorry a cafe with that id was not found in the database."}), 404
+#         return jsonify(error={'Not Found': 'Sorry a cafe with that id was not found in the database.'}), 404
 #     else:
 #         cafe.coffee_price = new_price
 #         db.session.commit()
-#         return jsonify(response={"success": "Successfully updated the price."}), 200
+#         return jsonify(response={'success': 'Successfully updated the price.'}), 200
 #
 # # HTTP DELETE - Delete Record
-# @app.route("/report-closed/<int:cafe_id>", methods=["DELETE"])
+# @app.route('/report-closed/<int:cafe_id>', methods=['DELETE'])
 # def delete(cafe_id):
-#     api_key = request.args.get("api-key")
-#     if not api_key == "TopSecretAPIKey":
-#         return jsonify(error={"Access Denied": "You do not have permission to access this. Make sure "
-#                                                "you have the correct API key."})
+#     api_key = request.args.get('api-key')
+#     if not api_key == 'TopSecretAPIKey':
+#         return jsonify(error={'Access Denied': 'You do not have permission to access this. Make sure '
+#                                                'you have the correct API key.'})
 #     else:
 #         try:
 #             cafe = db.session.get(Cafe, cafe_id)
 #             db.session.delete(cafe)
 #             db.session.commit()
-#             return jsonify(response={"success": "Successfully deleted cafe from the database."})
+#             return jsonify(response={'success': 'Successfully deleted cafe from the database.'})
 #         except AttributeError:
-#             return jsonify(error={"Not Found": "Sorry a cafe with that id was not found in the database."})
+#             return jsonify(error={'Not Found': 'Sorry a cafe with that id was not found in the database.'})
 
 if __name__ == '__main__':
     app.run(debug=True)

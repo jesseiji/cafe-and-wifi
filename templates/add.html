@@ -1,0 +1,16 @@
+{% include 'header.html' %}
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<header>
+								<h1>Add a New Cafe</h1>
+							</header>
+							<div class="add-form">
+								{% from 'bootstrap4/form.html' import render_form %}
+								{{ render_form(form) }}
+							</div>
+						</div>
+					</div>
+
+{% include 'footer.html' %}

@@ -3363,3 +3363,26 @@ input, select, textarea {
     font-size: 1.4em;
     font-weight: 500;
 }
+
+.flex {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.flex p {
+    font-size: 1.2em
+}
+
+.flex a {
+    width: 50%
+}
+
+iframe {
+    width: 55%;
+    aspect-ratio: 3 / 2;
+}
+
+.add-form .form-group{
+    margin-bottom: 2em;
+}
