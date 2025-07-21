@@ -51,6 +51,10 @@ class CafeForm(FlaskForm):
     can_take_calls = SelectField('Takes Phone Calls', choices=['True', 'False'], validators=[DataRequired()])
     submit = SubmitField('Submit Post')
 
+class Delete(FlaskForm):
+    sure = SelectField('Are You Sure?', choices=['Yes', 'No'], validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 def to_dict(self):
     return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
@@ -126,8 +130,8 @@ def search():
 @app.route('/cafe/<int:cafe_id>')
 def show_cafe(cafe_id):
     global req_list
-
     cafe = to_dict(db.session.get(Cafe, cafe_id))
+
     if not cafe:
         abort(404, description='Cafe not found')
     else:
@@ -175,35 +179,19 @@ def add():
 
     return render_template('add.html', form=form)
 
-#
-# # HTTP PUT/PATCH - Update Record
-# @app.route('/update-price/<int:cafe_id>', methods=['PATCH'])
-# def update_price(cafe_id):
-#     new_price = request.args.get('new-price')
-#     try:
-#         cafe = db.session.get(Cafe, cafe_id)
-#     except AttributeError:
-#         return jsonify(error={'Not Found': 'Sorry a cafe with that id was not found in the database.'}), 404
-#     else:
-#         cafe.coffee_price = new_price
-#         db.session.commit()
-#         return jsonify(response={'success': 'Successfully updated the price.'}), 200
-#
-# # HTTP DELETE - Delete Record
-# @app.route('/report-closed/<int:cafe_id>', methods=['DELETE'])
-# def delete(cafe_id):
-#     api_key = request.args.get('api-key')
-#     if not api_key == 'TopSecretAPIKey':
-#         return jsonify(error={'Access Denied': 'You do not have permission to access this. Make sure '
-#                                                'you have the correct API key.'})
-#     else:
-#         try:
-#             cafe = db.session.get(Cafe, cafe_id)
-#             db.session.delete(cafe)
-#             db.session.commit()
-#             return jsonify(response={'success': 'Successfully deleted cafe from the database.'})
-#         except AttributeError:
-#             return jsonify(error={'Not Found': 'Sorry a cafe with that id was not found in the database.'})
+@app.route('/delete/<int:cafe_id>', methods=['GET', 'POST'])
+def delete(cafe_id):
+    form = Delete()
+    cafe = db.session.get(Cafe, cafe_id)
+
+    if form.validate_on_submit():
+        if request.form.get('sure') == 'Yes':
+            db.session.delete(cafe)
+            db.session.commit()
+
+        return redirect(url_for('home'))
+
+    return render_template('delete.html', form=form, cafe=cafe)
 
 if __name__ == '__main__':
     app.run(debug=True)

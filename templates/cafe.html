@@ -4,7 +4,10 @@
 					<div id="main">
 						<div class="inner">
 							<header>
-								<a href="{{ url_for('home') }}" class="button primary"><- Back to Home</a>
+								<div class="flex">
+									<a href="{{ url_for('home') }}" class="button primary" style="width: 30% !important"><- Back to Home</a>
+									<a href="{{ url_for('delete', cafe_id=cafe['id']) }}" class="button primary" style="background-color: #ef5350 !important; width: 30% !important">Delete Cafe</a>
+								</div>
 								<h1>{{ cafe['name'] }}</h1>
                             </header>
 							<div class="flex">

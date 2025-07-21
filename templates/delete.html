@@ -1,0 +1,16 @@
+{% include 'header.html' %}
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<header>
+								<h1>Delete {{ cafe['name'] }}</h1>
+							</header>
+							<div class="cafe-form">
+								{% from 'bootstrap4/form.html' import render_form %}
+								{{ render_form(form) }}
+							</div>
+						</div>
+					</div>
+
+{% include 'footer.html' %}
