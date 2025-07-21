@@ -56,39 +56,63 @@
 									</p>
 								{% endif %}
 							</header>
-							<form action="{{ url_for('home') }}" method="POST">
-								{% for req in range(int(len(req_list)/2)) %}
-								    {% if req_list[req] in is_checked %}
-										<input type="checkbox" id="{{ req_list[req] }}" name="{{ req_list[req] }}" checked>
-								    {% else %}
-										<input type="checkbox" id="{{ req_list[req] }}" name="{{ req_list[req] }}">
-									{% endif %}
-									<label for="{{ req_list[req] }}">{{ req_list[req+4] }}</label>
-								{% endfor %}
-								<input type="submit" id="submit" name="submit">
-							</form>
+							{% if not search %}
+								<form action="{{ url_for('home') }}" method="POST">
+									{% for req in range(int(len(req_list)/2)) %}
+										{% if req_list[req] in is_checked %}
+											<input type="checkbox" id="{{ req_list[req] }}" name="{{ req_list[req] }}" checked>
+										{% else %}
+											<input type="checkbox" id="{{ req_list[req] }}" name="{{ req_list[req] }}">
+										{% endif %}
+										<label for="{{ req_list[req] }}">{{ req_list[req+4] }}</label>
+									{% endfor %}
+									<input type="submit" id="submit" name="submit">
+								</form>
+							{% endif %}
 							<section class="tiles">
 								{% for cafe in cafes %}
-									{% if check_req(is_checked, cafe) %}
-									<article class="style5">
-										<span class="image">
-											<img src="static/images/cafeimg{{ ((cafe['id'] - 7) %7 + 1) }}.jpg" alt="cafe image" />
-										</span>
-										<a href="{{ url_for('show_cafe', cafe_id=cafe['id']) }}">
-											<h2>{{cafe['name']}}</h2>
-											<div class="content">
-												<ul>
-													{% for req in range(len(req_list[:4])) %}
-														{% if cafe[req_list[req]] %}
-														<li>{{ req_list[req+4] }}✅</li>
-														{% else %}
-														<li>{{ req_list[req+4] }}❌</li>
-														{% endif %}
-													{% endfor %}
-												</ul>
-											</div>
-										</a>
-									</article>
+									{% if not search %}
+										{% if check_req(is_checked, cafe) %}
+										<article class="style5">
+											<span class="image">
+												<img src="static/images/cafeimg{{ ((cafe['id'] - 7) %7 + 1) }}.jpg" alt="cafe image" />
+											</span>
+											<a href="{{ url_for('show_cafe', cafe_id=cafe['id']) }}">
+												<h2>{{cafe['name']}}</h2>
+												<div class="content">
+													<ul>
+														{% for req in range(len(req_list[:4])) %}
+															{% if cafe[req_list[req]] %}
+															<li>{{ req_list[req+4] }}✅</li>
+															{% else %}
+															<li>{{ req_list[req+4] }}❌</li>
+															{% endif %}
+														{% endfor %}
+													</ul>
+												</div>
+											</a>
+										</article>
+										{% endif %}
+									{% else %}
+										<article class="style5">
+											<span class="image">
+												<img src="static/images/cafeimg{{ ((cafe['id'] - 7) %7 + 1) }}.jpg" alt="cafe image" />
+											</span>
+											<a href="{{ url_for('show_cafe', cafe_id=cafe['id']) }}">
+												<h2>{{cafe['name']}}</h2>
+												<div class="content">
+													<ul>
+														{% for req in range(len(req_list[:4])) %}
+															{% if cafe[req_list[req]] %}
+															<li>{{ req_list[req+4] }}✅</li>
+															{% else %}
+															<li>{{ req_list[req+4] }}❌</li>
+															{% endif %}
+														{% endfor %}
+													</ul>
+												</div>
+											</a>
+										</article>
 									{% endif %}
 								{% endfor %}
 							</section>

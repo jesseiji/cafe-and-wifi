@@ -40,13 +40,13 @@ def to_dict(self):
     return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
 is_checked = []
+req_list = ['has_wifi', 'has_sockets', 'has_toilet', 'can_take_calls', 'Has Reliable Wifi', 'Has Power Sockets',
+                'Has Restrooms', 'Takes Calls']
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    global is_checked
+    global is_checked, req_list
     cafes = [to_dict(cafe) for cafe in Cafe.query.order_by(Cafe.id).all()]
-    req_list = ['has_wifi', 'has_sockets', 'has_toilet', 'can_take_calls', 'Has Reliable Wifi', 'Has Power Sockets',
-                'Has Restrooms', 'Takes Calls']
 
     if request.method == 'POST':
         for req in req_list[:4]:
@@ -73,9 +73,8 @@ def home():
 
 @app.route('/search', methods=["GET"])
 def search():
+    global req_list
     cafes = [to_dict(cafe) for cafe in Cafe.query.order_by(Cafe.id).all()]
-    req_list = ['has_wifi', 'has_sockets', 'has_toilet', 'can_take_calls', 'Has Reliable Wifi', 'Has Power Sockets',
-                'Has Restrooms', 'Takes Calls']
 
     new_cafes = []
 
@@ -88,20 +87,26 @@ def search():
                 chars_ = [char for char in word]
                 chars.append(chars_)
 
-            q_chars = [char for char in query.lower()]
-            for charset in chars:
-                word_len = len(q_chars)
-                count = 0
-                for char in range(word_len):
-                    try:
-                        if q_chars[char] == charset[char]:
-                            count += 1
-                    except IndexError:
-                        pass
-                if count == word_len:
-                    new_cafes.append(cafe)
+            q_charsets = [charset for charset in query.lower().split()]
+            word_count = len(q_charsets)
+            correct_words = 0
 
-    return render_template('index.html', cafes=new_cafes, len=len, req_list=req_list, search=True, query=query.lower())
+            for q_charset in q_charsets:
+                for charset in chars:
+                    word_len = len(q_charset)
+                    count = 0
+                    for char in range(word_len):
+                        try:
+                            if charset[char] == q_charset[char]:
+                                count += 1
+                        except IndexError:
+                            pass
+                    if count == word_len and cafe not in new_cafes:
+                        correct_words += 1
+                        if correct_words == word_count:
+                            new_cafes.append(cafe)
+
+    return render_template('index.html', cafes=new_cafes, len=len, req_list=req_list, search=True, query=query.lower(), int=int)
 
 @app.route('/cafe/<int:cafe_id>')
 def show_cafe(cafe_id):
